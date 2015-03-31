@@ -1,0 +1,113 @@
+<!doctype html>
+<head>
+  <meta charset='utf-8'/>
+  <script src='//code.jquery.com/jquery-2.0.0.min.js'></script>
+  <script src='//rawgit.com/jashkenas/coffeescript/master/extras/coffee-script.js'></script>
+  <script src='/public/jumly.min.js'></script>
+  <script src='//cdnjs.cloudflare.com/ajax/libs/codemirror/5.1.0/codemirror.js'></script>
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.1.0/codemirror.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.1.0/mode/javascript/javascript.js"></script>
+  <style type="text/css">
+    .CodeMirror {border: 1px solid lightgray; font-size:13px; }
+    #jumly-diagram { margin-left: 2%; width: 45%; display: inline-block; vertical-align: top;}
+    #jumly-editor { width: 45%; margin-top: 1em; display: inline-block;}
+    input {
+      border-radius: 4px;
+      padding: 2.5px;
+      font-size: 1.4em;
+      border: 1px solid lightgray;
+      font-family: 'courier';
+    }
+    button {
+      color: white;
+      background: royalblue;
+      border: 1px solid navy;
+      padding: .5em .8em;
+      font-size: .9em;
+      font-family: 'Verdana';
+      margin-right: 50px;
+    }
+    #help {
+      background: seagreen;
+    }
+    .hide {
+      display: none;
+    }
+    .saved {
+      position: absolute;
+      z-index: 999;
+      top: 20px;
+      left: 45%;
+      color: white;
+      background: darkseagreen;
+      font-size: 1.4em;
+      font-family: 'Arial';
+      padding: 4px 6px;
+      border-radius: 5px;
+      box-shadow: 2px 2px 5px lightgray;
+    }
+  </style>
+</head>
+<body>
+  <div class='saved hide'>Saved</div>
+  <!--
+  <script id='jumly-container' type='text/jumly+sequence'>
+  @found "You", ->
+    @message "get", "JUMLY"
+  </script>
+  -->
+  <div><input type='text' name='title' id='title' style='width: 44%' tabindex='1' placeholder='Title for the sequence diagram'/></div>
+  <div id="jumly-editor" ></div>
+  <div id="jumly-diagram"></div>
+  <div class='help'>
+    <input type='hidden' id='hiddenId'/><button id='save'>Save</button><button id='help'>Help</button><br/>
+    <iframe id='ref' frameborder=0 src='http://jumly.tmtk.net/reference.html' class='hide' height='600' style='width: 900px'></iframe>
+  </div>
+  <script>
+  
+    $("#help").click(function(){
+      if($('#ref').hasClass('hide')) {
+        $('#ref').removeClass('hide');
+      } else {
+        $('#ref').addClass('hide');
+      }
+    });
+
+    a = CodeMirror($("#jumly-editor")[0], {
+      lineNumbers: true,
+      mode: "javascript",
+      tabSize: 2
+    });
+    a.on("change", function(){
+      try {
+        $("#jumly-editor").css("box-shadow", 'none');
+        JUMLY.eval($("<pre>").html(a.getValue()), {
+          "into": "#jumly-diagram"
+        });
+      } catch(e) {
+        console.log('error');
+        $("#jumly-editor").css("box-shadow", '0px 0px 4px red');
+      }
+    });
+    function saved() {
+      $(".saved").removeClass("hide");
+      setTimeout(function(){
+        $(".saved").addClass("hide");
+      }, 2500);
+    }
+    $("#save").click(function(){
+      var action = 'new', did = null;
+      if($('#hiddenId').val()) {
+        action = 'edit';
+        did = $('#hiddenId').val();
+      }
+      $.ajax({
+        url: "./api.php",
+        method: "POST",
+        data: {'action': action, 'title': $('#title').val(), 'diagram_id':$('#hiddenId').val(), 'code': a.getValue()},
+        success: function(data){$('#hiddenId').val(data.diagram_id); saved()},
+        error: function(){}
+      })
+    })
+  </script>
+</body>
