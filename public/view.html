@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset='utf-8'/>
+        <script src='//code.jquery.com/jquery-2.0.0.min.js'></script>
+    </head>
+    <body>
+        <a href='editor.html'>New Sequence Diagram</a>
+        <table>
+            <thead><tr><th>Title</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+        </table>
+        <script>
+            $.ajax({
+                url: "./api.php",
+                type: "GET",
+                success: function(data){
+                    for(i in data) {
+                        var d = data[i];
+                        var tr = $("<tr>");
+                        tr.append("<td><a href='editor.html?diagram_id="+d.diagram_id+"'>"+d.title+"</a></td><td><a href='#' class='delete' data-did='"+d.diagram_id+"'>X</a></td>");
+                        $("table tbody").append(tr);
+                    }
+                }
+            });
+            
+            $("table tbody").on("click", ".delete", function(){
+                $.ajax({
+                    url: "./api.php",
+                    type: "POST",
+                    data: {action: "delete", diagram_id: $(this).data('did')},
+                    success: function() {
+                        location.reload();
+                    }
+                })
+            });
+        </script>
+    </body>
+</html>

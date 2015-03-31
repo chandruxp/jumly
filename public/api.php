@@ -6,8 +6,8 @@ require('medoo.min.php');
 $db = new medoo([
     'database_type' => 'mysql',
 	'database_name' => 'c9',
-	'server' => '127.0.0.1',
-	'username' => 'chandruxp',
+	'server' => getenv('IP'),
+	'username' => getenv('C9_USER'),
 	'password' => '',
 	'charset' => 'utf8'
     ]);
@@ -44,10 +44,12 @@ switch($_POST['action']) {
 }
 
 if($_GET['diagram_id']) {
-    $result = $db->select("revision", "*", ['diagram_id'=>$_GET['diagram_id']]);
+    //$result = $db->select("revision", "*", ['diagram_id'=>$_GET['diagram_id']]);
+    $result = $db->query("SELECT * FROM revision where diagram_id='".$_GET['diagram_id']."' ORDER BY created DESC")->fetchAll();
     echo json_encode($result);
 } else {
-    $result = $db->select("revision", "*");
+    //$result = $db->select("revision", "*");
+    $result = $db->query("SELECT * FROM (SELECT * FROM  `revision` ORDER BY created DESC) AS t GROUP BY diagram_id ORDER BY created DESC")->fetchAll();
     echo json_encode($result);
 }
 
